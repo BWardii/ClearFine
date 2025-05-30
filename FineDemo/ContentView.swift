@@ -227,279 +227,309 @@ struct HomeScreen: View {
                         .blur(radius: 50)
                 }
                 
-                // Main content
-                ScrollView {
-                    VStack(spacing: 35) {
-                        // Logo at the top of the screen
+                VStack(spacing: 0) {
+                    // Fixed prominent logo header
+                    VStack(spacing: 15) {
+                        // Large prominent logo
                         Image("Logo")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 180)
-                            .padding(.top, 30)
+                            .frame(width: 240, height: 120)
+                            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
                         
-                        // Search section
-                        VStack(spacing: 20) {
-                            Text("Enter your license plate below")
-                                .font(.headline)
-                                .foregroundColor(Color("TextColor"))
-                            
-                            // License plate input
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Image(systemName: "rectangle.and.text.magnifyingglass")
-                                        .foregroundColor(isInputFocused ? Color("PrimaryColor") : Color.gray.opacity(0.6))
-                                        .font(.system(size: 22))
-                                        .padding(.leading, 16)
-                                    
-                                    TextField("AB12 CDE", text: $licensePlate)
-                                        .font(.system(size: 22, weight: .medium))
-                                        .padding(16)
-                                        .foregroundColor(Color("SecondaryColor"))
-                                        .onChange(of: licensePlate) { newValue in
-                                            // Format and validate as user types
-                                            licensePlate = newValue.uppercased()
-                                        }
-                                        .autocapitalization(.allCharacters)
-                                        .disableAutocorrection(true)
-                                        .onTapGesture {
-                                            isInputFocused = true
-                                        }
-                                }
-                                .background(
-                                    RoundedRectangle(cornerRadius: 15)
-                                        .fill(Color.white.opacity(0.9))
-                                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 3)
+                        // App tagline
+                        Text("UK License Plate Fine Checker")
+                            .font(.system(size: 18, weight: .medium, design: .rounded))
+                            .foregroundColor(Color("TextColor").opacity(0.8))
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.top, 20)
+                    .padding(.bottom, 25)
+                    .padding(.horizontal)
+                    .background(
+                        // Subtle background for the header
+                        Rectangle()
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color("Background").opacity(0.95),
+                                        Color("Background").opacity(0.8)
+                                    ]),
+                                    startPoint: .top,
+                                    endPoint: .bottom
                                 )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 15)
-                                        .stroke(isInputFocused ? Color("PrimaryColor") : Color.clear, lineWidth: 2)
-                                )
-                                
-                                Text("UK format only, e.g. AB12 CDE")
-                                    .font(.caption)
-                                    .foregroundColor(Color("TextColor").opacity(0.8))
-                                    .padding(.leading, 5)
-                            }
-                            .padding(.horizontal, 20)
-                            
-                            // Search button
-                            Button(action: {
-                                isInputFocused = false
-                                if plateService.isValidUKPlate(licensePlate) {
-                                    onSearch(licensePlate)
-                                } else {
-                                    showValidationAlert = true
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: "magnifyingglass")
-                                        .font(.system(size: 18, weight: .bold))
-                                    Text("Check for Fines")
-                                        .font(.system(size: 18, weight: .bold))
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 18)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color("PrimaryColor"), Color("PrimaryColor").opacity(0.8)]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(15)
-                                .shadow(color: Color("PrimaryColor").opacity(0.4), radius: 8, x: 0, y: 5)
-                            }
-                            .disabled(!plateService.isValidUKPlate(licensePlate))
-                            .opacity(plateService.isValidUKPlate(licensePlate) ? 1.0 : 0.7)
-                            .padding(.horizontal, 20)
-                            .alert(isPresented: $showValidationAlert) {
-                                Alert(
-                                    title: Text("Invalid License Plate"),
-                                    message: Text("Please enter a valid UK license plate format."),
-                                    dismissButton: .default(Text("OK"))
-                                )
-                            }
-                        }
-                        .padding(.vertical, 20)
-                        .padding(.horizontal, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 25)
-                                .fill(Color("SecondaryColor").opacity(0.2))
-                                .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: 8)
-                        )
-                        .padding(.horizontal)
-                        
-                        // Account section for non-logged in users
-                        if plateService.authState == .loggedOut {
-                            VStack(spacing: 15) {
-                                HStack {
-                                    Image(systemName: "person.badge.plus")
-                                        .font(.system(size: 18))
-                                        .foregroundColor(.white)
-                                        .padding(8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .fill(Color("PrimaryColor"))
-                                        )
-                                    
-                                    Text("Save Your Searches")
-                                        .font(.title3)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(Color("TextColor"))
-                                    
-                                    Spacer()
-                                }
-                                .padding(.horizontal)
-                                
-                                Text("Create an account to save your license plates and access them from any device")
-                                    .font(.subheadline)
-                                    .foregroundColor(Color("TextColor").opacity(0.8))
-                                    .multilineTextAlignment(.leading)
-                                    .padding(.horizontal)
-                                
-                                Button(action: {
-                                    // Direct to register screen instead of profile/login
-                                    NotificationCenter.default.post(name: Notification.Name("NavigateToRegister"), object: nil)
-                                }) {
-                                    HStack {
-                                        Image(systemName: "person.crop.circle.badge.plus")
-                                        Text("Create Account")
-                                    }
+                            )
+                            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    )
+                    
+                    // Main scrollable content
+                    ScrollView {
+                        VStack(spacing: 35) {
+                            // Search section
+                            VStack(spacing: 20) {
+                                Text("Enter your license plate below")
                                     .font(.headline)
-                                    .foregroundColor(Color("PrimaryColor"))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 16)
+                                    .foregroundColor(Color("TextColor"))
+                                
+                                // License plate input
+                                VStack(spacing: 8) {
+                                    HStack {
+                                        Image(systemName: "rectangle.and.text.magnifyingglass")
+                                            .foregroundColor(isInputFocused ? Color("PrimaryColor") : Color.gray.opacity(0.6))
+                                            .font(.system(size: 22))
+                                            .padding(.leading, 16)
+                                        
+                                        TextField("AB12 CDE", text: $licensePlate)
+                                            .font(.system(size: 22, weight: .medium))
+                                            .padding(16)
+                                            .foregroundColor(Color("SecondaryColor"))
+                                            .onChange(of: licensePlate) { newValue in
+                                                // Format and validate as user types
+                                                licensePlate = newValue.uppercased()
+                                            }
+                                            .autocapitalization(.allCharacters)
+                                            .disableAutocorrection(true)
+                                            .onTapGesture {
+                                                isInputFocused = true
+                                            }
+                                    }
                                     .background(
                                         RoundedRectangle(cornerRadius: 15)
-                                            .fill(Color("SecondaryColor").opacity(0.2))
+                                            .fill(Color.white.opacity(0.9))
+                                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 3)
                                     )
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 15)
-                                            .stroke(Color("PrimaryColor"), lineWidth: 1)
+                                            .stroke(isInputFocused ? Color("PrimaryColor") : Color.clear, lineWidth: 2)
+                                    )
+                                    
+                                    Text("UK format only, e.g. AB12 CDE")
+                                        .font(.caption)
+                                        .foregroundColor(Color("TextColor").opacity(0.8))
+                                        .padding(.leading, 5)
+                                }
+                                .padding(.horizontal, 20)
+                                
+                                // Search button
+                                Button(action: {
+                                    isInputFocused = false
+                                    if plateService.isValidUKPlate(licensePlate) {
+                                        onSearch(licensePlate)
+                                    } else {
+                                        showValidationAlert = true
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "magnifyingglass")
+                                            .font(.system(size: 18, weight: .bold))
+                                        Text("Check for Fines")
+                                            .font(.system(size: 18, weight: .bold))
+                                    }
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 18)
+                                    .background(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color("PrimaryColor"), Color("PrimaryColor").opacity(0.8)]),
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .cornerRadius(15)
+                                    .shadow(color: Color("PrimaryColor").opacity(0.4), radius: 8, x: 0, y: 5)
+                                }
+                                .disabled(!plateService.isValidUKPlate(licensePlate))
+                                .opacity(plateService.isValidUKPlate(licensePlate) ? 1.0 : 0.7)
+                                .padding(.horizontal, 20)
+                                .alert(isPresented: $showValidationAlert) {
+                                    Alert(
+                                        title: Text("Invalid License Plate"),
+                                        message: Text("Please enter a valid UK license plate format."),
+                                        dismissButton: .default(Text("OK"))
                                     )
                                 }
-                                .padding(.horizontal)
-                                .padding(.top, 5)
                             }
-                            .padding(.vertical, 15)
+                            .padding(.vertical, 20)
+                            .padding(.horizontal, 10)
                             .background(
                                 RoundedRectangle(cornerRadius: 25)
                                     .fill(Color("SecondaryColor").opacity(0.2))
-                                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                                    .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: 8)
                             )
                             .padding(.horizontal)
-                        }
-                        
-                        // Saved plates section
-                        if !plateService.savedPlates.isEmpty {
-                            VStack(alignment: .leading, spacing: 15) {
-                                HStack {
-                                    Text("Recent Searches")
-                                        .font(.title3)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(Color("TextColor"))
+                            .padding(.top, 20)
+                            
+                            // Account section for non-logged in users
+                            if plateService.authState == .loggedOut {
+                                VStack(spacing: 15) {
+                                    HStack {
+                                        Image(systemName: "person.badge.plus")
+                                            .font(.system(size: 18))
+                                            .foregroundColor(.white)
+                                            .padding(8)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(Color("PrimaryColor"))
+                                            )
+                                        
+                                        Text("Save Your Searches")
+                                            .font(.title3)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(Color("TextColor"))
+                                        
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal)
                                     
-                                    Spacer()
+                                    Text("Create an account to save your license plates and access them from any device")
+                                        .font(.subheadline)
+                                        .foregroundColor(Color("TextColor").opacity(0.8))
+                                        .multilineTextAlignment(.leading)
+                                        .padding(.horizontal)
                                     
-                                    Text("\(plateService.savedPlates.count)")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 5)
-                                        .background(Color("PrimaryColor"))
-                                        .clipShape(Capsule())
+                                    Button(action: {
+                                        // Direct to register screen instead of profile/login
+                                        NotificationCenter.default.post(name: Notification.Name("NavigateToRegister"), object: nil)
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "person.crop.circle.badge.plus")
+                                            Text("Create Account")
+                                        }
+                                        .font(.headline)
+                                        .foregroundColor(Color("PrimaryColor"))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 16)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 15)
+                                                .fill(Color("SecondaryColor").opacity(0.2))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 15)
+                                                .stroke(Color("PrimaryColor"), lineWidth: 1)
+                                        )
+                                    }
+                                    .padding(.horizontal)
+                                    .padding(.top, 5)
                                 }
+                                .padding(.vertical, 15)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 25)
+                                        .fill(Color("SecondaryColor").opacity(0.2))
+                                        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                                )
                                 .padding(.horizontal)
-                                
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 15) {
-                                        ForEach(plateService.savedPlates, id: \.self) { plate in
-                                            Button(action: {
-                                                licensePlate = plate
-                                            }) {
-                                                VStack(spacing: 8) {
-                                                    Text(plate)
-                                                        .font(.system(size: 18, weight: .bold))
-                                                        .foregroundColor(Color("TextColor"))
-                                                        .padding(.horizontal, 15)
-                                                        .padding(.vertical, 8)
-                                                        .background(
-                                                            RoundedRectangle(cornerRadius: 8)
-                                                                .fill(Color("SecondaryColor"))
-                                                        )
-                                                    
-                                                    Text("Tap to search")
-                                                        .font(.caption)
-                                                        .foregroundColor(Color("TextColor").opacity(0.8))
-                                                }
-                                                .padding(.vertical, 12)
-                                                .padding(.horizontal, 12)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 15)
-                                                        .fill(Color("SecondaryColor").opacity(0.3))
-                                                        .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 3)
-                                                )
-                                            }
-                                            .contextMenu {
-                                                Button(role: .destructive, action: {
-                                                    plateService.removeSavedPlate(plate)
+                            }
+                            
+                            // Saved plates section
+                            if !plateService.savedPlates.isEmpty {
+                                VStack(alignment: .leading, spacing: 15) {
+                                    HStack {
+                                        Text("Recent Searches")
+                                            .font(.title3)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(Color("TextColor"))
+                                        
+                                        Spacer()
+                                        
+                                        Text("\(plateService.savedPlates.count)")
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 5)
+                                            .background(Color("PrimaryColor"))
+                                            .clipShape(Capsule())
+                                    }
+                                    .padding(.horizontal)
+                                    
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 15) {
+                                            ForEach(plateService.savedPlates, id: \.self) { plate in
+                                                Button(action: {
+                                                    licensePlate = plate
                                                 }) {
-                                                    Label("Delete", systemImage: "trash")
+                                                    VStack(spacing: 8) {
+                                                        Text(plate)
+                                                            .font(.system(size: 18, weight: .bold))
+                                                            .foregroundColor(Color("TextColor"))
+                                                            .padding(.horizontal, 15)
+                                                            .padding(.vertical, 8)
+                                                            .background(
+                                                                RoundedRectangle(cornerRadius: 8)
+                                                                    .fill(Color("SecondaryColor"))
+                                                            )
+                                                        
+                                                        Text("Tap to search")
+                                                            .font(.caption)
+                                                            .foregroundColor(Color("TextColor").opacity(0.8))
+                                                    }
+                                                    .padding(.vertical, 12)
+                                                    .padding(.horizontal, 12)
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 15)
+                                                            .fill(Color("SecondaryColor").opacity(0.3))
+                                                            .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 3)
+                                                    )
+                                                }
+                                                .contextMenu {
+                                                    Button(role: .destructive, action: {
+                                                        plateService.removeSavedPlate(plate)
+                                                    }) {
+                                                        Label("Delete", systemImage: "trash")
+                                                    }
                                                 }
                                             }
                                         }
+                                        .padding(.horizontal)
+                                        .padding(.bottom, 5)
                                     }
-                                    .padding(.horizontal)
-                                    .padding(.bottom, 5)
                                 }
+                                .padding(.vertical, 15)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 25)
+                                        .fill(Color("SecondaryColor").opacity(0.2))
+                                        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                                )
+                                .padding(.horizontal)
                             }
-                            .padding(.vertical, 15)
-                            .background(
-                                RoundedRectangle(cornerRadius: 25)
-                                    .fill(Color("SecondaryColor").opacity(0.2))
-                                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-                            )
-                            .padding(.horizontal)
+                            
+                            // App info card
+                            HomeInfoCard()
+                                .padding(.horizontal)
                         }
-                        
-                        // App info card
-                        HomeInfoCard()
-                            .padding(.horizontal)
+                        .padding(.bottom, 50)
                     }
-                    .padding(.bottom, 50)
                 }
                 .navigationBarTitle("", displayMode: .inline)
                 .navigationBarItems(
                     leading: Button(action: onProfile) {
                         HStack(spacing: 8) {
                             Image(systemName: plateService.currentUser?.profileImageName ?? "person.circle")
-                                .font(.system(size: 20))
+                                .font(.system(size: 18))
                                 .foregroundColor(Color("PrimaryColor"))
                             
                             if plateService.authState == .loggedIn {
                                 Text(plateService.currentUser?.name.components(separatedBy: " ").first ?? "Profile")
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(Color("TextColor"))
                             }
                         }
-                        .padding(8)
+                        .padding(6)
                         .background(
                             Capsule()
                                 .fill(Color("SecondaryColor").opacity(0.3))
-                                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                                .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 1)
                         )
                     },
                     trailing: Button(action: onSettings) {
                         Image(systemName: "gearshape.fill")
-                            .font(.system(size: 20))
+                            .font(.system(size: 18))
                             .foregroundColor(Color("PrimaryColor"))
-                            .padding(10)
+                            .padding(8)
                             .background(
                                 Circle()
                                     .fill(Color("SecondaryColor").opacity(0.3))
-                                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                                    .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 1)
                             )
                     }
                 )
